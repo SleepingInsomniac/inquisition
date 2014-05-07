@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8"/>
+	<title>Inquisition Test</title>
+	<meta name="author" content="Alex Cilnk"/>
+	<meta name="description" content="Inquisition"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<link rel="icon" href="/favicon.ico"/>
+	<!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="inquisition.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+	<h1>Iquisition</h1>
+	<input name="name" id="name" placeholder="Your Name" type="text"/>
+	<input type="button" onclick="testRequest(document.getElementById('name').value);" value="Hello"/>
+	<pre id="out"></pre>
+	<script type="text/javascript" id="">
+	
+		var server = new LxServer();
+		
+		function testRequest(name) {
+			server.send(new LxAction('get/test', {hello: name}, function(r) {
+				console.log(r);
+				writeObjectTo(r, document.getElementById('out'));
+			}));
+		}
+		function writeObjectTo(obj, ele) {
+			var string = '';
+			for (var i in obj) {
+				string += i+': '+obj[i]+'\n';
+			}
+			ele.innerHTML += string;
+		}
+		
+	</script>
+</body>
+</html>
