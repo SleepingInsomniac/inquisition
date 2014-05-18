@@ -1,36 +1,44 @@
 function LxServer() {
+	var _this = this;
 	this.sent = [];
-	this.timeOutLength = 10000;
-
+	
+	this.serialize = function(obj, prefix) {
+	  var str = [];
+	  for(var p in obj) {
+	    var k = prefix ? prefix + "[" + p + "]" : p, v = obj[p];
+	    str.push(typeof v == "object" ?
+	      _this.serialize(v, k) :
+	      encodeURIComponent(k) + "=" + encodeURIComponent(v));
+	  }
+	  return str.join("&");
+	}
+	
 	this.send = function(actions) {
 		var xmlhttp;
 		var query = [];
-		
-		if (!(actions instanceof Array)) actions = [actions]; // put the request in an array if it's singular
-		
-		// form the query in an array, later to be joined by '&'
+
+		if (!(actions instanceof Array)) actions = [actions];
+
 		for (var i in actions) {
-			var action = actions[i];
-			query.push(i+'[name]='+action.name);
-			Object.keys(action.params).forEach(function (key) {
-				query.push(i+"["+key+"]="+action.params[key]);
-			});
+			query.push(_this.serialize(actions[i].params, actions[i].name)); // string up the query
 		}
 
-		if (window.XMLHttpRequest) xmlhttp = new XMLHttpRequest(); // code for IE7+, Firefox, Chrome, Opera, Safari
-		else xmlhttp = new ActiveXObject("Microsoft.XMLHTTP"); // code for IE6, IE5
-		
-		// if the server takes too long
-		var timeOut = setTimeout(function() {
-			throw 'The request timed out!';
+		if (window.XMLHttpRequest)
+			xmlhttp = new XMLHttpRequest(); // code for IE7+, Firefox, Chrome, Opera, Safari
+		else
+			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP"); // code for IE6, IE5
+
+		var tooLong = setTimeout(function() {
+			alert('The request timed out!');
+			document.body.removeChild(loading);
 			xmlhttp = null;
-		}, this.timeOutLength);
+		}, 15000);
 
 		xmlhttp.onreadystatechange = function() {
 			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 
-				clearTimeout(timeOut);
-				
+				clearTimeout(tooLong);
+				document.body.removeChild(loading);
 				try {
 					var response = JSON.parse(xmlhttp.responseText);
 					for (var i in actions) {
@@ -53,12 +61,13 @@ function LxServer() {
 			}
 		}
 
-		xmlhttp.open("POST","action/",true);
+		console.log('sending: '+query.join('&'));
+
+		xmlhttp.open("POST","/action/",true);
 		xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded;charset=UTF-8");
 		// xmlhttp.setRequestHeader("Content-type","text/plain;charset=UTF-8");
 		xmlhttp.send(query.join('&'));
 		this.sent = this.sent.concat(actions);
-		return this.sent;
 	};
 }
 
