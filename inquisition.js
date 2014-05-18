@@ -20,7 +20,11 @@ function LxServer() {
 		if (!(actions instanceof Array)) actions = [actions];
 
 		for (var i in actions) {
-			query.push(_this.serialize(actions[i].params, actions[i].method)); // string up the query
+			if (!actions[i].params || Object.keys(actions[i].params).length == 0) {
+				query.push(encodeURIComponent(actions[i].method)+'=');
+			} else {
+				query.push(_this.serialize(actions[i].params, actions[i].method)); // string up the query
+			}
 		}
 
 		if (window.XMLHttpRequest)
