@@ -20,10 +20,12 @@
 		var server = new LxServer();
 		
 		function testRequest(name) {
-			server.send(new LxAction('get/test', {hello: name}, function(r) {
+			var test = new LxAction('get/test', {hello: name}, function(r) {
 				console.log(r);
 				writeObjectTo(r, document.getElementById('out'));
-			}));
+			});
+						
+			server.send(test);
 		}
 		function writeObjectTo(obj, ele) {
 			var string = '';

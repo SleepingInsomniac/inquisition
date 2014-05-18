@@ -6,10 +6,10 @@ $approved = [
 
 $response = array();
 
-foreach ($_POST as $action) {
-	$response[$action['name']] = array();
-	if (in_array($action['name'], $approved))
-		include "{$action['name']}.php";
+foreach ($_POST as $method => $params) {
+	$response[$method] = array();
+	if (in_array($method, $approved))
+		include "$method.php";
 }
 
 echo json_encode($response);

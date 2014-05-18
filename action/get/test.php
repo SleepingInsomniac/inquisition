@@ -1,3 +1,3 @@
 <?php
 
-$response[$action['name']]['greet'] = "Hi ".$action['hello'];
+$response[$method]['greet'] = "Hi ".$params['hello'];

@@ -3,14 +3,14 @@ function LxServer() {
 	this.sent = [];
 	
 	this.serialize = function(obj, prefix) {
-	  var str = [];
-	  for(var p in obj) {
-	    var k = prefix ? prefix + "[" + p + "]" : p, v = obj[p];
-	    str.push(typeof v == "object" ?
-	      _this.serialize(v, k) :
-	      encodeURIComponent(k) + "=" + encodeURIComponent(v));
-	  }
-	  return str.join("&");
+		var str = [];
+		for(var p in obj) {
+			var k = prefix ? prefix + "[" + p + "]" : p, v = obj[p];
+			str.push(typeof v == "object" ?
+				_this.serialize(v, k) :
+	      		encodeURIComponent(k) + "=" + encodeURIComponent(v));
+		}
+		return str.join("&");
 	}
 	
 	this.send = function(actions) {
@@ -20,33 +20,31 @@ function LxServer() {
 		if (!(actions instanceof Array)) actions = [actions];
 
 		for (var i in actions) {
-			query.push(_this.serialize(actions[i].params, actions[i].name)); // string up the query
+			query.push(_this.serialize(actions[i].params, actions[i].method)); // string up the query
 		}
 
 		if (window.XMLHttpRequest)
 			xmlhttp = new XMLHttpRequest(); // code for IE7+, Firefox, Chrome, Opera, Safari
 		else
 			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP"); // code for IE6, IE5
-
+		
 		var tooLong = setTimeout(function() {
 			alert('The request timed out!');
-			document.body.removeChild(loading);
 			xmlhttp = null;
 		}, 15000);
-
+		
 		xmlhttp.onreadystatechange = function() {
 			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-
+				
 				clearTimeout(tooLong);
-				document.body.removeChild(loading);
 				try {
 					var response = JSON.parse(xmlhttp.responseText);
 					for (var i in actions) {
 						var action = actions[i];
-						var r = response[action.name];
-						action.responseFunction(r);
+						var r = response[action.method];
+						action.onComplete(r);
 						if (r.error) {
-							console.error(action.name+": "+r.error);
+							console.error(action.method+": "+r.error);
 						}
 					}
 				} catch(err) {
@@ -56,14 +54,13 @@ function LxServer() {
 			} else if (xmlhttp.readyState == 4) {
 
 				clearTimeout(tooLong);
-				document.body.removeChild(loading);
 				alert('Ajax Error: '+xmlhttp.status);
 			}
 		}
 
 		console.log('sending: '+query.join('&'));
 
-		xmlhttp.open("POST","/action/",true);
+		xmlhttp.open("POST","action/",true);
 		xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded;charset=UTF-8");
 		// xmlhttp.setRequestHeader("Content-type","text/plain;charset=UTF-8");
 		xmlhttp.send(query.join('&'));
@@ -71,8 +68,8 @@ function LxServer() {
 	};
 }
 
-function LxAction(actionName, actionParams, responseFunction) {
-	this.name = actionName;
+function LxAction(actionMethod, actionParams, responseFunction) {
+	this.method = actionMethod;
 	this.params = actionParams;
-	this.responseFunction = responseFunction;
+	this.onComplete = responseFunction;
 }
