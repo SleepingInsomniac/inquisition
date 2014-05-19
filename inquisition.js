@@ -43,17 +43,19 @@ function LxServer() {
 				clearTimeout(tooLong);
 				try {
 					var response = JSON.parse(xmlhttp.responseText);
-					for (var i in actions) {
-						var action = actions[i];
-						var r = response[action.method];
-						action.onComplete(r);
-						if (r.error) {
-							console.error(action.method+": "+r.error);
-						}
-					}
 				} catch(err) {
+					console.error(err);
 					console.error(xmlhttp.responseText);
 				}
+				for (var i in actions) {
+					var action = actions[i];
+					var r = response[action.method];
+					action.onComplete(r);
+					if (r.error) {
+						console.error(action.method+": "+r.error);
+					}
+				}
+				
 
 			} else if (xmlhttp.readyState == 4) {
 
@@ -62,7 +64,7 @@ function LxServer() {
 			}
 		}
 
-		console.log('sending: '+query.join('&'));
+		// console.log('sending: '+query.join('&'));
 
 		xmlhttp.open("POST","action/",true);
 		xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded;charset=UTF-8");
