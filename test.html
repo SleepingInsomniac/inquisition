@@ -16,8 +16,14 @@
 	<input type="button" onclick="testRequest(document.getElementById('name').value);" value="Hello"/>
 	<pre id="out"></pre>
 	<script type="text/javascript" id="">
-	
-		var server = new LxServer();
+		
+		var indicator = new LxIndicator(function() {
+			console.log('starting ajax indicator!');
+		}, function() {
+			console.log('stopping ajax indicator!');
+		});
+		
+		var server = new LxServer("action/", indicator);
 		
 		function testRequest(name) {
 			var test = new LxAction('get/test', {hello: name}, function(r) {

@@ -1,29 +1,30 @@
-function LxServer() {
+function LxServer(actionPath, indicator, onTimeout, onError) {
+	if (!actionPath) actionPath = 'action/';
+	if (!indicator) indicator = new LxIndicator(function() {}, function() {});
+	if (!onTimeout) onTimeout = function() { console.warn('Ajax timed out!'); };
+	if (!onError) onError = function(error) { console.error(error); };
+	
 	var _this = this;
+	this.actionPath = actionPath;
 	this.sent = [];
-	
-	this.serialize = function(obj, prefix) {
-		var str = [];
-		for(var p in obj) {
-			var k = prefix ? prefix + "[" + p + "]" : p, v = obj[p];
-			str.push(typeof v == "object" ?
-				_this.serialize(v, k) :
-	      		encodeURIComponent(k) + "=" + encodeURIComponent(v));
-		}
-		return str.join("&");
-	}
-	
+	this.indicator = indicator;
+	this.onTimeout = onTimeout;
+	this.onError = onError;
+	this.timeout = 15000;
+		
 	this.send = function(actions) {
 		var xmlhttp;
 		var query = [];
-
+		
+		_this.indicator.start();
+		
 		if (!(actions instanceof Array)) actions = [actions];
 
 		for (var i in actions) {
 			if (!actions[i].params || Object.keys(actions[i].params).length == 0) {
 				query.push(encodeURIComponent(actions[i].method)+'=');
 			} else {
-				query.push(_this.serialize(actions[i].params, actions[i].method)); // string up the query
+				query.push(LxServer.serialize(actions[i].params, actions[i].method)); // string up the query
 			}
 		}
 
@@ -33,9 +34,10 @@ function LxServer() {
 			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP"); // code for IE6, IE5
 		
 		var tooLong = setTimeout(function() {
-			alert('The request timed out!');
+			_this.onTimeout();
+			_this.indicator.stop();
 			xmlhttp = null;
-		}, 15000);
+		}, _this.timeout);
 		
 		xmlhttp.onreadystatechange = function() {
 			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -50,32 +52,56 @@ function LxServer() {
 				for (var i in actions) {
 					var action = actions[i];
 					var r = response[action.method];
-					action.onComplete(r);
+					action.onResponse(r);
 					if (r.error) {
 						console.error(action.method+": "+r.error);
 					}
 				}
 				
+				_this.indicator.stop();
 
 			} else if (xmlhttp.readyState == 4) {
 
 				clearTimeout(tooLong);
-				alert('Ajax Error: '+xmlhttp.status);
+				_this.indicator.stop();
+				console.error('Ajax Error: '+xmlhttp.status);
 			}
 		}
 
-		// console.log('sending: '+query.join('&'));
-
 		xmlhttp.open("POST","action/",true);
 		xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded;charset=UTF-8");
-		// xmlhttp.setRequestHeader("Content-type","text/plain;charset=UTF-8");
 		xmlhttp.send(query.join('&'));
 		this.sent = this.sent.concat(actions);
 	};
+	
+	return this;
 }
 
-function LxAction(actionMethod, actionParams, responseFunction) {
-	this.method = actionMethod;
-	this.params = actionParams;
-	this.onComplete = responseFunction;
+LxServer.serialize = function(obj, prefix) {
+	var str = [];
+	for(var p in obj) {
+		var k = prefix ? prefix + "[" + p + "]" : p, v = obj[p];
+		str.push(typeof v == "object" ?
+			LxServer.serialize(v, k) :
+      		encodeURIComponent(k) + "=" + encodeURIComponent(v));
+	}
+	return str.join("&");
+}
+
+
+function LxAction(actionMethod, actionParams, onResponse) {
+	
+	this.method     = actionMethod;
+	this.params     = actionParams;
+	this.onResponse = onResponse;
+	
+	return this;
+}
+
+function LxIndicator(start, stop) {
+	
+	this.start = start;
+	this.stop  = stop;
+	
+	return this;
 }
