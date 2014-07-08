@@ -10,7 +10,7 @@ function LxServer(actionPath, indicator, onTimeout, onError) {
 	this.indicator = indicator;
 	this.onTimeout = onTimeout;
 	this.onError = onError;
-	this.timeout = 15000;
+	this.timeout = 5000;
 		
 	this.send = function(actions) {
 		var xmlhttp;
@@ -34,6 +34,7 @@ function LxServer(actionPath, indicator, onTimeout, onError) {
 			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP"); // code for IE6, IE5
 		
 		var tooLong = setTimeout(function() {
+			console.log('ajax timeout');
 			_this.onTimeout();
 			_this.indicator.stop();
 			xmlhttp = null;
@@ -46,6 +47,7 @@ function LxServer(actionPath, indicator, onTimeout, onError) {
 				try {
 					var response = JSON.parse(xmlhttp.responseText);
 				} catch(err) {
+					_this.indicator.stop();
 					console.error(err);
 					console.error(xmlhttp.responseText);
 				}
@@ -53,7 +55,9 @@ function LxServer(actionPath, indicator, onTimeout, onError) {
 					var action = actions[i];
 					var r = response[action.method];
 					action.onResponse(r);
-					if (r.error) {
+					if (r == null) {
+						console.warn('no response from method');
+					} else if (r.error !== undefined) {
 						console.error(action.method+": "+r.error);
 					}
 				}
