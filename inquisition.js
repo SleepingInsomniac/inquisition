@@ -72,7 +72,7 @@ function LxServer(actionPath, indicator, onTimeout, onError) {
 			}
 		}
 
-		xmlhttp.open("POST","action/",true);
+		xmlhttp.open("POST", actionPath, true);
 		xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded;charset=UTF-8");
 		xmlhttp.send(query.join('&'));
 		this.sent = this.sent.concat(actions);
