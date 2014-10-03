@@ -1,46 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 	<meta charset="utf-8"/>
 	<title>Inquisition Test</title>
 	<meta name="author" content="Alex Cilnk"/>
 	<meta name="description" content="Inquisition"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 	<link rel="icon" href="/favicon.ico"/>
-	<!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 	<script src="inquisition.js" type="text/javascript" charset="utf-8"></script>
+
 </head>
 <body>
 	<h1>Iquisition</h1>
-	<input name="name" id="name" placeholder="Your Name" type="text"/>
-	<input type="button" onclick="testRequest(document.getElementById('name').value);" value="Hello"/>
-	<pre id="out"></pre>
+	<form onsubmit="testRequest(document.getElementById('name').value); return false;">
+		<input name="name" id="name" placeholder="Your Name" type="text"/>
+		<input type="submit" value="Say Hello"/>
+	</form>
+	<div id="out"></div>
+	
 	<script type="text/javascript" id="">
-		
-		var indicator = new LxIndicator(function() {
-			console.log('starting ajax indicator!');
-		}, function() {
-			console.log('stopping ajax indicator!');
+				
+		var server = new Lx.Server({
+			path: "action/",
+			indicator: {
+				begin: function()  { console.log('starting ajax indicator!'); },
+				finish: function() { console.log('stopping ajax indicator!'); }
+			}
+			// etc...
 		});
 		
-		var server = new LxServer("action/", indicator);
-		
 		function testRequest(name) {
-			var test = new LxAction('get/test', {hello: name}, function(r) {
-				console.log(r);
-				writeObjectTo(r, document.getElementById('out'));
+			// send a get request.
+			server.get({
+				method: 'test',
+				params: {
+					name: name
+				},
+				onResponse: function(r) {
+					var p = document.createElement('p');
+					p.innerHTML = r.greeting;
+					document.getElementById('out').appendChild(p);
+				}
 			});
-						
-			server.send(test);
-		}
-		function writeObjectTo(obj, ele) {
-			var string = '';
-			for (var i in obj) {
-				string += i+': '+obj[i]+'\n';
-			}
-			ele.innerHTML += string;
 		}
 		
 	</script>
+	
 </body>
 </html>
