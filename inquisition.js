@@ -24,7 +24,7 @@ server.get({
 	// =============================
 	// = Set object param defaults =
 	// =============================
-	function setDefaults (defaults, options) {
+	Lx.setDefaults = function (defaults, options) {
 		for (var i in defaults) {
 			if (options[i] == undefined) {
 				options[i] = defaults[i];
@@ -39,15 +39,16 @@ server.get({
 	Lx.Server = function (options) {
 		
 		// set the defaults for the path (the location you handle ajax requests from)
-		options = setDefaults({
+		options = Lx.setDefaults({
 			path: '/ajax/',
 			indicator: {},
-			defaultMethod: 'GET',
-			timeout: 5000
+			timeout: 5000,
+			contentType: 'application/x-www-form-urlencoded;charset=UTF-8',
+			json: true
 		}, options);
 		
 		// call backs for ajax events
-		options.indicator = setDefaults({
+		options.indicator = Lx.setDefaults({
 			begin:   function () { console.log( 'Ajax began...'   ); },
 			finish:  function () { console.log( 'Ajax finished!'  ); },
 			timeout: function () { console.log( 'Ajax timed out!' ); },
@@ -120,28 +121,37 @@ server.get({
 
 					clearTimeout(tooLong); // it didn't take too long.
 					
-					try {
-						var response = JSON.parse(xmlhttp.responseText);
-					} catch(err) {
-						options.indicator.finish();
-						console.error(err);
-						console.error(xmlhttp.responseText);
-					}
+					// if the json option is set, try to parse, otherwise just return the text
+					if (options.json) {
 					
-					for (var i in actions) {
-						var action = actions[i];
-						var r = response[action.method];
-						// if nothing is specified, just log output to console.
-						if (action.onResponse == undefined) {
-							console.log(r);
-						} else {
-							action.onResponse(r);
+						try {
+							var response = JSON.parse(xmlhttp.responseText);
+						} catch(err) {
+							options.indicator.finish();
+							console.error(err);
+							console.error(xmlhttp.responseText);
 						}
-						if (r == null) {
-							console.warn('no response from method');
-						} else if (r.error !== undefined) {
-							console.error(action.method+": "+r.error);
+					
+						for (var i in actions) {
+							var action = actions[i];
+							var r = response[action.method];
+							// if nothing is specified, just log output to console.
+							if (action.onResponse == undefined) {
+								console.log(r);
+							} else {
+								action.onResponse(r);
+							}
+							if (r == null) {
+								console.warn('no response from method');
+							} else if (r.error !== undefined) {
+								console.error(action.method+": "+r.error);
+							}
 						}
+						
+					} else {
+						
+						action.onResponse(xmlhttp.responseText);
+						
 					}
 
 					options.indicator.finish();
@@ -161,13 +171,13 @@ server.get({
 			if (method == "POST") {
 
 				xmlhttp.open("POST", options.path, true);
-				xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded;charset=UTF-8");
+				xmlhttp.setRequestHeader("Content-type", options.contentType);
 				xmlhttp.send(query);
 
 			} else {
 				// append the data to the url for a get request...
 				xmlhttp.open("GET", options.path +'?'+ query, true);
-				xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded;charset=UTF-8");
+				xmlhttp.setRequestHeader("Content-type", options.contentType);
 				xmlhttp.send();
 
 			}
