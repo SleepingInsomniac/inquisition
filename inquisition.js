@@ -63,7 +63,7 @@ server.get({
 			for(var p in obj) {
 				var k = prefix ? prefix + "[" + p + "]" : p, v = obj[p];
 				str.push(typeof v == "object" ?
-					LxServer.serialize(v, k) :
+					serialize(v, k) :
 		      		encodeURIComponent(k) + "=" + encodeURIComponent(v));
 			}
 			return str.join("&");
