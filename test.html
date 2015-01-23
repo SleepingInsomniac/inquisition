@@ -20,29 +20,21 @@
 	<div id="out"></div>
 	
 	<script type="text/javascript" id="">
-				
-		var server = new Lx.Server({
-			path: "action/",
-			indicator: {
-				begin: function()  { console.log('starting ajax indicator!'); },
-				finish: function() { console.log('stopping ajax indicator!'); }
-			}
-			// etc...
-		});
 		
 		function testRequest(name) {
-			// send a get request.
-			server.get({
-				method: 'test',
-				params: {
-					name: name
-				},
-				onResponse: function(r) {
-					var p = document.createElement('p');
-					p.innerHTML = r.greeting;
-					document.getElementById('out').appendChild(p);
-				}
-			});
+		    Iq({
+		        url: 'action/',
+                // method: 'POST',
+		        data: {
+		            test: {
+		                name: name
+		            }
+		        },
+		        json: true
+		    }).async(function(r) {
+		        console.log(r);
+		        document.getElementById('out').textContent += r.object.test.greeting;
+		    });
 		}
 		
 	</script>
